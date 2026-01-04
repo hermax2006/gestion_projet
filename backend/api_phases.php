@@ -1,56 +1,53 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
+
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') { exit; }
 
 require_once 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 // 1. RÉCUPÉRER LES PHASES
-if ($method === 'GET') {
-    $id_proj = $_GET['id_projet'] ?? null;
-    if ($id_proj) {
-        // On récupère les phases d'un projet spécifique
-        $stmt = $pdo->prepare("SELECT * FROM phase WHERE id_projet = ?");
-        $stmt->execute([$id_proj]);
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $id = $_GET['id_projet'] ?? null;
+    if ($id) {
+        // On filtre par l'ID du projet que React nous envoie
+        $stmt = $pdo->prepare("SELECT * FROM phase WHERE id_projet = ? ORDER BY dateFin ASC");
+        $stmt->execute([$id]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
     } else {
-        // Ou toutes les phases
-        $stmt = $pdo->query("SELECT * FROM phase");
+        echo json_encode([]);
     }
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 
-// 2. AJOUTER UNE PHASE
 if ($method === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
     
-    // 1. On récupère le budget total du projet
-    $stmtBudget = $pdo->prepare("SELECT montant FROM projet WHERE id_proj = ?");
+    // 1. Chercher le projet par 'id_projet' (et non 'code')
+    $stmtBudget = $pdo->prepare("SELECT montant FROM projet WHERE id_projet = ?");
     $stmtBudget->execute([$data['id_projet']]);
     $projet = $stmtBudget->fetch();
-    $budgetTotal = $projet['montant'];
 
-    // 2. On calcule la somme des phases déjà existantes
-    $stmtSomme = $pdo->prepare("SELECT SUM(montant) as total FROM phase WHERE id_projet = ?");
-    $stmtSomme->execute([$data['id_projet']]);
-    $sommeActuelle = $stmtSomme->fetch()['total'] ?? 0;
-
-    // 3. Vérification
-    if (($sommeActuelle + $data['montant']) > $budgetTotal) {
-        http_response_code(400); // Erreur client
-        echo json_encode(["error" => "Le budget total du projet est dépassé !"]);
+    if (!$projet) {
+        http_response_code(404);
+        echo json_encode(["error" => "ID Projet " . $data['id_projet'] . " n'existe pas dans la table projet"]);
         exit;
     }
 
-    // 4. Si c'est bon, on insère
+
     $sql = "INSERT INTO phase (dateFin, montant, etatFacturation, etatRealisation, etatPayement, id_projet) VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        $data['dateFin'], $data['montant'], $data['etatFacturation'], 
-        $data['etatRealisation'], $data['etatPayement'], $data['id_projet']
+        $data['dateFin'], 
+        $data['montant'], 
+        $data['etatFacturation'] ?? 'En attente', 
+        $data['etatRealisation'] ?? 'Pas commencé', 
+        $data['etatPayement'] ?? 'Non payé', 
+        $data['id_projet'] // Doit être l'ID réel présent dans la table projet
     ]);
     
-    echo json_encode(["message" => "Phase ajoutée avec succès"]);
+    echo json_encode(["message" => "Succès !"]);
 }

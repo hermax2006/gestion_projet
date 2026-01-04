@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import Organismes from './Organismes'; // Import du composant Organismes existant
+import Organismes from './Organismes'; 
+import Phases from './Phases';
+import Dashboard from './Dashboard';
+
 
 /**
  * Composant de Connexion - Design Responsive avec Tailwind CSS
@@ -117,13 +120,7 @@ function Login({ onLogin }) {
   );
 }
 
-// Mockup des autres composants pour éviter les erreurs d'importation
-const Phases = () => <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200"><h2>Gestion des Phases</h2><p>Interface Chef de Projet...</p></div>;
-const Dashboard = () => <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200"><h2>Tableau de Bord Financier</h2><p>Interface Comptabilité...</p></div>;
 
-/**
- * Composant Principal App
- */
 export default function App() {
   const [user, setUser] = useState(null);
   const [vueActuelle, setVueActuelle] = useState('');
@@ -146,8 +143,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 font-sans">
-      <header className="bg-slate-900 text-white px-8 py-4 flex flex-col md:flex-row justify-between items-center shadow-lg gap-4">
+    <div className="min-h-screen w-screen bg-slate-100 font-sans overflow-x-hidden">
+      <header className="bg-slate-900 text-white px-8 py-4 flex flex-col md:flex-row justify-between items-center shadow-lg gap-4 w-full">
         <div className="flex items-center gap-4">
           <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-xl">
             {(user.nom || user.login || "U").charAt(0).toUpperCase()}
@@ -195,10 +192,7 @@ export default function App() {
         </nav>
       </header>
 
-      <main className="p-8 max-w-7xl mx-auto">
-        <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-800 tracking-tight capitalize">{vueActuelle}</h1>
-        </div>
+      <main className="w-full h-[calc(100vh-80px)]">
         {vueActuelle === 'secretaire' && <Organismes />}
         {vueActuelle === 'chef' && <Phases />}
         {vueActuelle === 'dashboard' && <Dashboard />}

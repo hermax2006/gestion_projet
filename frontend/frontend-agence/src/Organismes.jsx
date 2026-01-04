@@ -78,8 +78,8 @@ function Organismes() {
   };
 
   return (
-    <div className="h-full w-full bg-slate-100">
-      <div className="w-full space-y-10 animate-in fade-in duration-700 py-8 px-8">
+    <div className="h-full w-screen bg-slate-100">
+      <div className="w-full space-y-10 animate-in fade-in duration-700 py-8 px-4">
         
         {/* SECTION HAUTE : FORMULAIRES DE SAISIE */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
